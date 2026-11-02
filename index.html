@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#10130f">
   <meta name="description" content="ZaBa AI — tu espacio personal de inteligencia artificial.">
   <title>ZaBa AI — Tu espacio de IA</title>
-  <link rel="stylesheet" href="styles.css?v=20261102-3">
+  <link rel="stylesheet" href="styles.css?v=20261102-4">
 </head>
 <body>
   <div class="app-shell">
@@ -60,6 +60,7 @@
         <div class="chat-thread hidden" id="chatThread" aria-live="polite"></div>
         <div class="composer-wrap" id="composerWrap">
           <div class="composer-shell">
+            <div class="project-context-status hidden" id="projectContextBar"><span class="project-context-icon">▱</span><span id="projectContextSummary"></span><button id="clearProjectContext" aria-label="Quitar contexto del proyecto">×</button></div>
             <textarea id="promptInput" rows="1" aria-label="Escribe tu mensaje" placeholder="Escribe lo que tienes en mente..."></textarea>
             <div class="composer-tools">
               <div class="composer-left">
@@ -82,6 +83,6 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="Cerrar">×</button><div id="modalContent"></div></section>
   </div>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=20261102-3"></script>
+  <script src="app.js?v=20261102-4"></script>
 </body>
 </html>

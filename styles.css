@@ -26,3 +26,31 @@
 .conversation-menu button.danger-action:hover{background:#3a2522;color:#ffc0b9}
 .section-tools{display:flex;align-items:center;gap:2px}
 #toggleArchived[aria-pressed="true"]{color:#c4ed92;background:#252c20}
+.message-actions{flex-wrap:wrap}
+.danger-button{border:1px solid #b6544d;border-radius:8px;padding:9px 13px;background:#a9443d;color:#fff0ee;font-size:10px;font-weight:700}
+.danger-button:hover{background:#c2534a;border-color:#d36b61}
+.delete-title{color:#dff2c5;overflow-wrap:anywhere}
+.delete-warning{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #49332e;border-radius:9px;background:#2a201d;color:#cfaca4;font-size:10px;line-height:1.5}
+.delete-warning span:first-child{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:none;background:#59342f;color:#f2b5a8;font-weight:800}
+.pdf-response{color:#d4c7ed!important}
+.pdf-response:hover{border-color:#645183!important;color:#eee2ff!important}
+.project-context-status{display:flex;align-items:center;gap:8px;padding:8px 13px 2px;color:#b9d998;font-size:9px}
+.project-context-status button{margin-left:auto;border:0;background:transparent;color:#9da891;font-size:16px;border-radius:5px;width:22px;height:22px}
+.project-context-status button:hover{background:#30372b;color:#fff}
+.project-context-icon{display:grid;place-items:center;width:19px;height:19px;border-radius:6px;background:#293523;color:#c6ee94;font-size:14px}
+.project-file-list{max-height:190px;overflow:auto;margin:12px 0 9px;border:1px solid #333a2f;border-radius:8px;background:#171b15}
+.project-file{display:flex;align-items:center;gap:8px;min-height:32px;padding:6px 9px;border-bottom:1px solid #292f26;color:#cbd1c3;font-size:9px;cursor:pointer}
+.project-file:last-child{border-bottom:0}
+.project-file:hover{background:#22281e}
+.project-file input{accent-color:#b8e980;flex:none}
+.project-file span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.project-file small{color:#7e8778;white-space:nowrap}
+.project-connection-status{display:inline-block;margin-left:9px;color:#c4ed92;font-size:9px;overflow-wrap:anywhere}
+.project-action-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.project-pane>.permission-card{margin-top:8px}
+.saved-project-list{margin-top:12px;max-height:125px;overflow:auto}
+.saved-project-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2b3028;padding:7px 2px;color:#cbd1c3;font-size:10px}
+.file-preview{max-height:190px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #343a30;border-radius:8px;background:#11140f;color:#cbd5bf;padding:11px;font:9px/1.55 ui-monospace,SFMono-Regular,monospace}
+.link-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.terabox-card{padding:16px}
+.terabox-card p{line-height:1.65}
