@@ -35,19 +35,27 @@
     if (prefs.saveHistory) store.write('conversations', conversations.map(c => ({...c, messages:c.messages.map(m => ({...m, attachments:(m.attachments||[]).map(a=>({name:a.name,type:a.type}))}))})));
   }
   function getCurrent() { return conversations.find(c => c.id === currentId); }
-  function newConversation() { currentId = null; currentAgent = null; thread.innerHTML = ''; thread.classList.add('hidden'); welcome.classList.remove('hidden'); $('#breadcrumbTitle').textContent = 'Nueva conversación'; input.focus(); renderConversationList(); }
+  function newConversation() { currentId = null; store.write('currentConversation',null); currentAgent = null; sendButton.disabled=false; thread.innerHTML = ''; thread.classList.add('hidden'); welcome.classList.remove('hidden'); $('#breadcrumbTitle').textContent = 'Nueva conversación'; input.focus(); renderConversationList(); }
   function setConversation(id) {
     const conv = conversations.find(c => c.id === id); if (!conv) return;
-    currentId = id; $('#breadcrumbTitle').textContent = conv.title; welcome.classList.add('hidden'); thread.classList.remove('hidden'); thread.innerHTML = '';
-    conv.messages.forEach(m => renderMessage(m.role, m.content, m.attachments || [], false));
+    currentId = id; sendButton.disabled=false; store.write('currentConversation',id); $('#breadcrumbTitle').textContent = conv.title; welcome.classList.add('hidden'); thread.classList.remove('hidden'); thread.innerHTML = '';
+    conv.messages.forEach(m => renderMessage(m.role, m.content, m.attachments || []));
     renderConversationList(); thread.scrollTop = thread.scrollHeight;
     $('#sidebar').classList.remove('mobile-open');
   }
+  function deleteConversation(id) {
+    const conversation=conversations.find(c=>c.id===id);if(!conversation)return;
+    if(!confirm(`¿Eliminar «${conversation.title}»? Esta conversación no se puede recuperar.`))return;
+    conversations=conversations.filter(c=>c.id!==id);saveConversations();
+    if(currentId===id){currentId=null;currentAgent=null;sendButton.disabled=false;store.write('currentConversation',null);thread.innerHTML='';thread.classList.add('hidden');welcome.classList.remove('hidden');$('#breadcrumbTitle').textContent='Nueva conversación';}
+    renderConversationList();toast('Conversación eliminada');
+  }
   function renderConversationList() {
     const list = $('#conversationList');
-    if (!conversations.length) { list.innerHTML = '<p style="font-size:10px;color:#747b70;padding:4px 9px">Tus chats aparecerán aquí</p>'; return; }
-    list.innerHTML = conversations.slice(0, 15).map(c => `<button class="conversation ${c.id === currentId ? 'active':''}" data-id="${escapeHtml(c.id)}"><span class="conversation-dot"></span><span>${escapeHtml(c.title)}</span><span class="more">···</span></button>`).join('');
+    if (!conversations.length) { list.innerHTML = '<p class="empty-conversations">Tus chats guardados aparecerán aquí</p>'; return; }
+    list.innerHTML = conversations.slice(0, 30).map(c => `<div class="conversation-row"><button class="conversation ${c.id === currentId ? 'active':''}" data-id="${escapeHtml(c.id)}" title="${escapeHtml(c.title)}"><span class="conversation-dot"></span><span>${escapeHtml(c.title)}</span></button><button class="conversation-delete" data-delete-id="${escapeHtml(c.id)}" aria-label="Eliminar conversación: ${escapeHtml(c.title)}" title="Eliminar conversación">×</button></div>`).join('');
     $$('.conversation', list).forEach(btn => btn.addEventListener('click', () => setConversation(btn.dataset.id)));
+    $$('.conversation-delete',list).forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();deleteConversation(btn.dataset.deleteId);}));
   }
   function renderMessage(role, content, files = [], add = true) {
     const row = document.createElement('article'); row.className = `message ${role}`;
@@ -67,6 +75,7 @@
   function ensureConversation(prompt) {
     if (!currentId) {
       currentId = (crypto.randomUUID?.() || String(Date.now()));
+      store.write('currentConversation',currentId);
       conversations.unshift({id:currentId,title:prompt.slice(0,36)+(prompt.length>36?'…':''),messages:[]});
       $('#breadcrumbTitle').textContent = conversations[0].title;
       welcome.classList.add('hidden'); thread.classList.remove('hidden'); renderConversationList();
@@ -82,19 +91,23 @@
     return `Gracias por compartirlo. Puedo ayudarte a explorar esta idea paso a paso.\n\n**Para avanzar, podemos:**\n- aclarar qué resultado buscas;\n- organizar las ideas en un plan concreto;\n- comparar opciones y sus ventajas;\n- crear un borrador que después revisamos juntos.\n\n> Esta respuesta es una muestra de la interfaz. Para conversar con un modelo real, añade la URL compatible y tu clave API en **Ajustes → Modelo**. La clave se guarda solo en este navegador si así lo eliges.`;
   }
   async function sendMessage(text = input.value) {
-    text = text.trim(); if (!text && !attached.length) return;
+    text = text.trim(); if ((!text && !attached.length) || sendButton.disabled) return;
     const filesForTurn = attached.map(f => ({name:f.name,type:f.type,dataUrl:f.type.startsWith('image/') ? f.dataUrl : undefined,previewDataUrl:f.previewDataUrl,textContent:f.textContent,previewNote:f.previewNote}));
     const userText = text || 'Analiza el archivo adjunto y ayúdame a entenderlo.';
-    const conv = ensureConversation(userText); conv.messages.push({role:'user',content:userText,attachments:filesForTurn});
+    const conv = ensureConversation(userText), targetId=conv.id, agentForTurn=currentAgent;
+    conv.messages.push({role:'user',content:userText,attachments:filesForTurn});
+    saveConversations();
     renderMessage('user', userText, filesForTurn); input.value=''; autoGrow(); clearAttachments(); sendButton.disabled=true;
     const typing=showTyping(); thread.scrollTop=thread.scrollHeight;
     let answer;
-    try { answer = prefs.apiKey ? await callModel(conv, userText) : getDemoReply(userText); }
+    try { answer = prefs.apiKey ? await callModel(conv, userText, agentForTurn) : getDemoReply(userText); }
     catch (error) { answer = `No se pudo contactar con el proveedor. **${error.message}**\n\nRevisa el endpoint, la clave y el modelo en Ajustes. Si el proveedor bloquea peticiones desde el navegador (CORS), necesitarás un pequeño servidor proxy: no publiques una clave secreta en un sitio público.`; }
-    typing.remove(); conv.messages.push({role:'assistant',content:answer}); renderMessage('assistant',answer); thread.scrollTop=thread.scrollHeight; saveConversations(); sendButton.disabled=false;
-    if (prefs.voiceReply) speak(answer);
+    typing.remove(); conv.messages.push({role:'assistant',content:answer}); saveConversations();
+    if(currentId===targetId){renderMessage('assistant',answer);thread.scrollTop=thread.scrollHeight;}
+    renderConversationList();sendButton.disabled=false;
+    if (prefs.voiceReply && currentId===targetId) speak(answer);
   }
-  async function callModel(conv, latest) {
+  async function callModel(conv, latest, agentForTurn=currentAgent) {
     const url = prefs.endpoint.trim(); if (!url) throw new Error('Añade la URL del proveedor en Ajustes.');
     const messages = conv.messages.slice(-20).map(m => {
       if (m.role !== 'user' || !m.attachments?.length) return {role:m.role,content:m.content};
@@ -109,7 +122,7 @@
       const fullText = m.content + (textParts ? '\n\n' + textParts : '');
       return imgs.length ? {role:'user',content:[{type:'text',text:fullText},...imgs]} : {role:'user',content:fullText};
     });
-    if (currentAgent) messages.unshift({role:'system',content:currentAgent.instructions || `Eres ${currentAgent.name}. ${currentAgent.description}`});
+    if (agentForTurn) messages.unshift({role:'system',content:agentForTurn.instructions || `Eres ${agentForTurn.name}. ${agentForTurn.description}`});
     else messages.unshift({role:'system',content:`Eres ZaBa AI, un asistente útil, claro y honesto. Estilo: ${prefs.style}. ${prefs.persona ? 'Preferencias de la persona: '+prefs.persona+'.' : ''} No afirmes haber ejecutado acciones locales ni tener permisos que no se han concedido.`});
     const response = await fetch(url, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${prefs.apiKey}`},body:JSON.stringify({model:prefs.model,messages,temperature:.7})});
     if (!response.ok) { let msg=`HTTP ${response.status}`; try { const data=await response.json(); msg=data.error?.message || msg; } catch {} throw new Error(msg); }
@@ -247,11 +260,13 @@
   $('#collapseSidebar').onclick=()=>$('#sidebar').classList.toggle('collapsed');$('#mobileMenu').onclick=()=>$('#sidebar').classList.toggle('mobile-open');
   $('#modalClose').onclick=closeModal;$('#modalBackdrop').onclick=e=>{if(e.target===$('#modalBackdrop'))closeModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('#sidebar').classList.remove('mobile-open');}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();newConversation();}});
   $('#searchChats').onclick=()=>{const q=prompt('Buscar en tus conversaciones:');if(q){const hit=conversations.find(c=>c.title.toLowerCase().includes(q.toLowerCase()));if(hit)setConversation(hit.id);else toast('No encontramos esa conversación');}};
-  $$('.conversation').forEach((b,i)=>b.onclick=()=>{if(conversations[i])setConversation(conversations[i].id);else{input.value=b.innerText;toast('Conversación de ejemplo: empieza un chat nuevo para responder');}});
   if(!prefs.rememberKey){const sessionKey=sessionStorage.getItem('zaba.sessionKey');if(sessionKey)prefs.apiKey=sessionKey;else if(!store.read('settings',{}).rememberKey)prefs.apiKey='';}
   $('#selectedModel').textContent=selectedModel;
   $$('.model-option').forEach(b=>b.classList.toggle('selected',b.dataset.model===selectedModel));
   prefs.model=selectedModel==='ZaBa Auto'?(prefs.defaultModel||prefs.model):({'Llama 3.3':'llama-3.3-70b-versatile','Gemini Flash':'gemini-2.0-flash'}[selectedModel]||prefs.model);
   updateConnectionStatus();
   renderConversationList();
+  const lastConversation=store.read('currentConversation',null);
+  if(lastConversation&&conversations.some(c=>c.id===lastConversation))setConversation(lastConversation);
+  else if(lastConversation)store.write('currentConversation',null);
 })();

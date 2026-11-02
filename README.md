@@ -14,7 +14,7 @@ Después visita `http://localhost:8000`.
 
 ## Qué puedes probar
 
-- Chat interactivo, conversaciones recientes guardadas en el navegador y tarjetas para iniciar tareas.
+- Chat interactivo; conversaciones recientes persistentes, recuperables al volver a abrir ZaBa y eliminables individualmente.
 - Proveedores preconfigurados: OpenRouter (incluye descubrimiento en vivo de modelos con precio cero), Google Gemini, Groq y endpoints OpenAI-compatible. Se autocompletan las URL y modelos iniciales; puedes descubrir modelos disponibles o escribir otro ID desde **Ajustes → Modelo**. Sin clave, el chat muestra respuestas demostrativas.
 - Selector de modelo, adjuntos de imagen, vídeo y documentos (hasta 20 MB), voz mediante las APIs de voz disponibles en el navegador.
 - Agentes predefinidos y creación de agentes personalizados, preferencias de respuesta y proyectos.
