@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10130f">
+  <meta name="description" content="ZaBa AI — tu espacio personal de inteligencia artificial.">
+  <title>ZaBa AI — Tu espacio de IA</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-row">
+        <a class="brand" href="#" aria-label="ZaBa AI, inicio">
+          <span class="brand-mark"><span></span><span></span><span></span><span></span></span>
+          <span class="brand-name">ZaBa<span>AI</span></span>
+        </a>
+        <button class="icon-button sidebar-collapse" id="collapseSidebar" aria-label="Contraer menú" title="Contraer menú"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6M20 5v14"/></svg></button>
+      </div>
+      <button class="new-chat-button" id="newChat"><span class="plus-icon">＋</span> Nueva conversación <kbd>⌘ K</kbd></button>
+      <div class="sidebar-section">
+        <p class="section-label">TU ESPACIO</p>
+        <button class="nav-item active" data-view="chat"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg><span>Chat</span></button>
+        <button class="nav-item" id="agentsNav"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M12 3v4M8 14h.01M16 14h.01M9 18h6"/></svg><span>Agentes</span><span class="nav-count">3</span></button>
+        <button class="nav-item" id="projectsNav"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 10h18"/></svg><span>Proyectos</span></button>
+      </div>
+      <div class="sidebar-section conversations-section">
+        <div class="section-heading"><p class="section-label">RECIENTES</p><button class="tiny-icon" aria-label="Buscar conversaciones" id="searchChats"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div>
+        <div class="conversation-list" id="conversationList">
+          <button class="conversation active"><span class="conversation-dot"></span><span>Ideas para mi próximo proyecto</span><span class="more">···</span></button>
+          <button class="conversation"><span class="conversation-dot"></span><span>Plan de viaje por Andalucía</span></button>
+          <button class="conversation"><span class="conversation-dot"></span><span>Explicación de redes neuronales</span></button>
+          <button class="conversation"><span class="conversation-dot"></span><span>Receta de pan de masa madre</span></button>
+        </div>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="local-card"><div class="local-card-top"><span class="status-indicator"></span><span>Tu espacio, bajo tu control</span></div><p>Los permisos locales están desactivados.</p><button id="openPermissions">Revisar permisos <span>→</span></button></div>
+        <button class="profile-button" id="openSettings"><span class="avatar">Z</span><span class="profile-info"><strong>Mi espacio</strong><small>Personalizar ZaBa AI</small></span><svg class="profile-menu-icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="mobileMenu" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="breadcrumb"><span>Mi espacio</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg><strong id="breadcrumbTitle">Nueva conversación</strong></div>
+        <div class="topbar-actions">
+          <button class="privacy-pill" id="privacyInfo"><span class="lock-icon"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span> Privacidad <span class="chevron">⌄</span></button>
+          <button class="icon-button settings-top" id="openSettingsTop" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.3a1.7 1.7 0 1 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1A1.7 1.7 0 0 0 4.2 12H4a1.7 1.7 0 1 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 1 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.3a1.7 1.7 0 1 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9z"/></svg></button>
+        </div>
+      </header>
+
+      <section class="workspace" id="workspace">
+        <div class="welcome" id="welcome">
+          <div class="welcome-eyebrow"><span class="sparkle">✳</span> TU INTELIGENCIA, A TU MANERA</div>
+          <h1>¿Qué vamos a<br><span>imaginar hoy?</span></h1>
+          <p class="welcome-copy">Un espacio para pensar, crear y resolver.<br class="desktop-break"> Tú eliges cómo empieza.</p>
+          <div class="quick-starts">
+            <button class="quick-card" data-prompt="Ayúdame a pensar una idea creativa para un proyecto nuevo."><span class="quick-icon violet"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8 14c-1.2-.9-2-2.4-2-4a6 6 0 0 1 12 0c0 1.6-.8 3.1-2 4-.7.6-1 1.2-1 2h-6c0-.8-.3-1.4-1-2z"/></svg></span><span><strong>Explorar una idea</strong><small>Convirtamos una intuición en un plan</small></span><span class="card-arrow">↗</span></button>
+            <button class="quick-card" data-prompt="Quiero crear un pequeño programa. Ayúdame a definir qué construir y cómo empezar."><span class="quick-icon mint"><svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span><span><strong>Crear algo nuevo</strong><small>Del primer boceto al código</small></span><span class="card-arrow">↗</span></button>
+            <button class="quick-card" data-prompt="Quiero entender un tema nuevo. Explícamelo paso a paso y con un ejemplo."><span class="quick-icon amber"><svg viewBox="0 0 24 24"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg></span><span><strong>Aprender algo</strong><small>Preguntas grandes, explicadas fácil</small></span><span class="card-arrow">↗</span></button>
+          </div>
+          <div class="welcome-footnote"><span class="mini-spark">✦</span> Empieza con una pregunta, un archivo o tu voz.</div>
+        </div>
+        <div class="chat-thread hidden" id="chatThread" aria-live="polite"></div>
+        <div class="composer-wrap" id="composerWrap">
+          <div class="composer-shell">
+            <textarea id="promptInput" rows="1" aria-label="Escribe tu mensaje" placeholder="Escribe lo que tienes en mente..."></textarea>
+            <div class="composer-tools">
+              <div class="composer-left">
+                <button class="tool-button" id="attachButton" title="Adjuntar archivo"><svg viewBox="0 0 24 24"><path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg><span>Adjuntar</span></button>
+                <input type="file" id="fileInput" hidden accept="image/*,video/*,.pdf,.txt,.md,.csv,.json,.js,.ts,.py,.html,.css">
+                <div class="model-wrap"><button class="model-selector" id="modelSelector"><span class="model-dot"></span><span id="selectedModel">ZaBa Auto</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></button><div class="model-menu hidden" id="modelMenu"><p class="menu-caption">ELIGE TU MODELO</p><button class="model-option selected" data-model="ZaBa Auto"><span class="model-dot auto"></span><span><strong>ZaBa Auto</strong><small>Usa el modelo configurado</small></span><span class="selected-check">✓</span></button><button class="model-option" data-model="Llama 3.3"><span class="model-dot local-dot"></span><span><strong>Llama 3.3</strong><small>Runtime local · configura endpoint</small></span></button><button class="model-option" data-model="Gemini Flash"><span class="model-dot cloud-dot"></span><span><strong>Gemini Flash</strong><small>Configura endpoint y credenciales</small></span></button><button class="model-option" data-model="Añadir proveedor"><span class="add-provider">＋</span><span><strong>Añadir proveedor</strong><small>Configura tu propia API</small></span></button><p class="model-disclaimer">La disponibilidad y las cuotas dependen del proveedor.</p></div></div>
+              </div>
+              <div class="composer-right"><button class="voice-button" id="voiceButton" aria-label="Usar voz" title="Hablar"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-4 0h8"/></svg></button><button class="send-button" id="sendButton" aria-label="Enviar mensaje" title="Enviar"><svg viewBox="0 0 24 24"><path d="M12 19V5m-7 7 7-7 7 7"/></svg></button></div>
+            </div>
+            <div class="attachment-preview hidden" id="attachmentPreview"></div>
+          </div>
+          <div class="composer-caption"><span><kbd>↵</kbd> para enviar <span class="caption-divider">·</span> <kbd>⇧ ↵</kbd> nueva línea</span><span>ZaBa puede equivocarse. <button id="learnPrivacy">Tus datos, tus reglas.</button></span></div>
+        </div>
+      </section>
+      <footer class="bottom-status"><span class="online-dot"></span> <span id="modeStatus">Modo demostración · configura un modelo en Ajustes</span> <span class="status-separator">·</span> <span>Sin permisos locales activos</span></footer>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="Cerrar">×</button><div id="modalContent"></div></section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
