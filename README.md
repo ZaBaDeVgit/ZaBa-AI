@@ -29,4 +29,8 @@ Las respuestas sin conexión a un proveedor son ejemplos de interfaz, no inferen
 
 ## Publicación
 
-El workflow de GitHub Actions en `.github/workflows/pages.yml` publica el sitio estático al actualizar la rama de trabajo. Antes del primer despliegue, un administrador del repositorio debe activar **Settings → Pages → Build and deployment → Source: GitHub Actions**; la integración de esta sesión no tiene permisos para habilitar Pages en el repositorio. Después, se puede volver a ejecutar el workflow fallido desde **Actions**. Consulta también la [especificación técnica](docs/especificacion-tecnica.md).
+## Publicado
+
+[**Abrir ZaBa AI en GitHub Pages**](https://zabadevgit.github.io/ZaBa-AI/)
+
+El workflow de `.github/workflows/pages.yml` publica los cambios al actualizar la rama de trabajo. Consulta también la [especificación técnica](docs/especificacion-tecnica.md).
