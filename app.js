@@ -6,8 +6,16 @@
     read(key, fallback) { try { const value = localStorage.getItem('zaba.' + key); return value ? JSON.parse(value) : fallback; } catch { return fallback; } },
     write(key, value) { try { localStorage.setItem('zaba.' + key, JSON.stringify(value)); } catch {} }
   };
-  const defaults = {endpoint:'https://api.openai.com/v1/chat/completions', apiKey:'', model:'gpt-4o-mini', defaultModel:'gpt-4o-mini', rememberKey:false, saveHistory:true, voiceReply:false, persona:'Cercano y claro', style:'Natural y cercano'};
+  const providerPresets = {
+    openrouter:{label:'OpenRouter · modelos gratuitos',endpoint:'https://openrouter.ai/api/v1/chat/completions',model:'openrouter/free',keyUrl:'https://openrouter.ai/settings/keys'},
+    gemini:{label:'Google Gemini API',endpoint:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',model:'gemini-2.5-flash',keyUrl:'https://aistudio.google.com/apikey'},
+    groq:{label:'Groq API',endpoint:'https://api.groq.com/openai/v1/chat/completions',model:'llama-3.3-70b-versatile',keyUrl:'https://console.groq.com/keys'},
+    custom:{label:'Otro endpoint compatible',endpoint:'https://api.openai.com/v1/chat/completions',model:'gpt-4o-mini',keyUrl:''}
+  };
+  const defaults = {provider:'openrouter',endpoint:providerPresets.openrouter.endpoint, apiKey:'', model:'openrouter/free', defaultModel:'openrouter/free', rememberKey:false, saveHistory:true, voiceReply:false, persona:'Cercano y claro', style:'Natural y cercano'};
   let prefs = {...defaults, ...store.read('settings', {})};
+  const previouslySavedSettings=store.read('settings',{});
+  if(!previouslySavedSettings.provider && previouslySavedSettings.endpoint) prefs.provider='custom';
   let conversations = store.read('conversations', []);
   let currentId = null, currentAgent = null, attached = [], selectedModel = store.read('activeModel','ZaBa Auto'), directoryHandle = null, recognition = null, toastTimer;
   const welcome = $('#welcome'), thread = $('#chatThread'), input = $('#promptInput'), sendButton = $('#sendButton'), fileInput = $('#fileInput');
@@ -147,19 +155,39 @@
     const tabbar=`<div class="modal-tabs">${tabs.map(([id,label])=>`<button class="modal-tab ${tab===id?'active':''}" data-tab="${id}">${label}</button>`).join('')}</div>`;
     let body='';
     if(tab==='general') body=`<div class="setting-row"><div class="setting-copy"><strong>Estilo de respuesta</strong><small>Elige el tono que ZaBa usará por defecto.</small></div><select class="form-select" style="width:170px" id="styleSelect"><option>Natural y cercano</option><option>Breve y directo</option><option>Detallado y didáctico</option><option>Técnico y preciso</option></select></div><div class="setting-row"><div class="setting-copy"><strong>Leer respuestas en voz alta</strong><small>Usa la voz disponible en tu dispositivo cuando el navegador lo permita.</small></div><button class="toggle ${prefs.voiceReply?'on':''}" id="voiceReplyToggle" aria-label="Leer respuestas en voz alta"></button></div><div class="setting-row"><div class="setting-copy"><strong>Guardar conversaciones en este dispositivo</strong><small>El historial se almacena localmente en este navegador.</small></div><button class="toggle ${prefs.saveHistory?'on':''}" id="historyToggle" aria-label="Guardar conversaciones"></button></div><label class="field-label" for="personaInput">Instrucciones personalizadas</label><textarea id="personaInput" class="form-textarea" placeholder="Por ejemplo: explícamelo con ejemplos cotidianos.">${escapeHtml(prefs.persona||'')}</textarea><p class="field-hint">Las instrucciones personalizan el estilo, nunca habilitan permisos ni acciones locales.</p>`;
-    if(tab==='model') body=`<p class="field-hint" style="margin:0 0 12px">Conecta un endpoint compatible con la API de chat de OpenAI. En una página pública, la clave queda en el navegador de quien la configure; para una app real, recomendamos un proxy propio protegido.</p><label class="field-label" for="endpointInput">URL del endpoint</label><input class="form-field" id="endpointInput" type="url" value="${escapeHtml(prefs.endpoint)}" placeholder="https://.../v1/chat/completions"><label class="field-label" for="modelInput">Nombre del modelo</label><input class="form-field" id="modelInput" value="${escapeHtml(prefs.defaultModel||prefs.model)}" placeholder="modelo"><label class="field-label" for="apiKeyInput">Clave API ${prefs.apiKey?'· configurada':''}</label><input class="form-field" id="apiKeyInput" type="password" autocomplete="new-password" placeholder="Pega tu clave API"><div class="setting-row"><div class="setting-copy"><strong>Recordar clave en este navegador</strong><small>Se almacena en el almacenamiento local del navegador, no cifrada por un servidor.</small></div><button class="toggle ${prefs.rememberKey?'on':''}" id="rememberKeyToggle" aria-label="Recordar clave"></button></div><p class="field-hint">Proveedores con políticas CORS restrictivas pueden requerir un proxy. ZaBa no incluye claves ni cuotas gratuitas propias.</p>`;
+    if(tab==='model') body=`<p class="field-hint" style="margin:0 0 12px">Elige un proveedor preconfigurado. ZaBa rellena su endpoint y permite descubrir los modelos publicados. Los planes gratuitos y sus cuotas pueden cambiar; cada proveedor exige tu propia clave.</p><label class="field-label" for="providerSelect">Proveedor</label><select class="form-select" id="providerSelect">${Object.entries(providerPresets).map(([id,p])=>`<option value="${id}" ${prefs.provider===id?'selected':''}>${p.label}</option>`).join('')}</select><div id="providerHelp" class="field-hint"></div><label class="field-label" for="endpointInput">URL del endpoint</label><input class="form-field" id="endpointInput" type="url" value="${escapeHtml(prefs.endpoint)}" placeholder="https://.../v1/chat/completions"><label class="field-label" for="modelInput">ID del modelo</label><div style="display:flex;gap:7px"><input class="form-field" id="modelInput" value="${escapeHtml(prefs.defaultModel||prefs.model)}" placeholder="modelo"><button class="secondary-button" id="discoverModels" style="white-space:nowrap">Descubrir modelos</button></div><select class="form-select hidden" id="discoveredModels" style="margin-top:7px"><option value="">Selecciona un modelo descubierto…</option></select><label class="field-label" for="apiKeyInput">Clave API ${prefs.apiKey?'· configurada':''}</label><input class="form-field" id="apiKeyInput" type="password" autocomplete="new-password" placeholder="Pega aquí tu clave; no la envíes por chat"><div class="setting-row"><div class="setting-copy"><strong>Recordar clave en este navegador</strong><small>Guardarla en este dispositivo es opcional y no equivale a cifrado de servidor.</small></div><button class="toggle ${prefs.rememberKey?'on':''}" id="rememberKeyToggle" aria-label="Recordar clave"></button></div><p class="field-hint">La clave la emite el proveedor, no ZaBa. Nunca se incluye una clave privada en el código público. Puede hacer falta un proxy si el proveedor bloquea CORS.</p>`;
     if(tab==='privacy') body=`<div class="setting-row"><div class="setting-copy"><strong>Procesamiento local</strong><small>Los archivos adjuntos permanecen en este navegador hasta que pulses Enviar. Las respuestas de demostración no envían datos.</small></div><span style="color:#c4ed92;font-size:9px">Activo</span></div><div class="setting-row"><div class="setting-copy"><strong>Permisos del dispositivo</strong><small>El acceso a archivos, micrófono y cámara está desactivado hasta que lo solicites.</small></div><button class="secondary-button" id="privacyPermissions">Gestionar</button></div><div class="setting-row"><div class="setting-copy"><strong>Borrar conversaciones guardadas</strong><small>Elimina el historial local de este navegador.</small></div><button class="secondary-button" id="clearHistory">Borrar datos</button></div><p class="field-hint">Cuando conectas un proveedor, el contenido enviado se procesa según sus términos y política de privacidad. Evita enviar datos sensibles sin revisar esas condiciones.</p>`;
     openModal(`<div class="modal-eyebrow">TU ESPACIO · AJUSTES</div><h2 id="modalTitle">Personaliza ZaBa AI</h2><p class="modal-subtitle">Tú decides cómo funciona y qué se comparte.</p>${tabbar}<div>${body}</div><div class="modal-actions"><button class="secondary-button" id="settingsDone">Cerrar</button><button class="primary-button" id="saveSettings">Guardar cambios</button></div>`);
     $$('.modal-tab').forEach(b=>b.onclick=()=>settingsModal(b.dataset.tab));
     const style=$('#styleSelect');if(style)style.value=prefs.style;
     const setToggle=(id,key)=>{const el=$('#'+id);if(el)el.onclick=()=>{prefs[key]=!prefs[key];el.classList.toggle('on',prefs[key]);};};
     setToggle('voiceReplyToggle','voiceReply');setToggle('historyToggle','saveHistory');setToggle('rememberKeyToggle','rememberKey');
+    const providerSelect=$('#providerSelect');
+    const updateProviderHelp=()=>{if(!providerSelect)return;const p=providerPresets[providerSelect.value];$('#providerHelp').innerHTML=p.keyUrl?`<a href="${p.keyUrl}" target="_blank" rel="noopener noreferrer" style="color:#c5ed94">Crear/obtener clave en ${p.label} ↗</a> · Se introduce aquí, no en el chat.`:'Endpoint y clave de tu proveedor compatible.';};
+    if(providerSelect){updateProviderHelp();providerSelect.onchange=()=>{const p=providerPresets[providerSelect.value];$('#endpointInput').value=p.endpoint;$('#modelInput').value=p.model;$('#apiKeyInput').value='';$('#discoveredModels').classList.add('hidden');prefs.apiKey='';sessionStorage.removeItem('zaba.sessionKey');updateProviderHelp();};}
+    $('#discoverModels')?.addEventListener('click',async()=>{
+      const btn=$('#discoverModels'),provider=providerSelect.value,endpoint=$('#endpointInput').value.trim(),key=$('#apiKeyInput').value.trim()||prefs.apiKey;
+      btn.disabled=true;btn.textContent='Buscando…';
+      try{
+        const modelsUrl=provider==='openrouter'?'https://openrouter.ai/api/v1/models':endpoint.replace(/\/chat\/completions\/?$/,'/models');
+        const headers={};if(key)headers.Authorization=`Bearer ${key}`;
+        const response=await fetch(modelsUrl,{headers});if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const result=await response.json();let models=result.data||result.models||[];
+        if(provider==='openrouter')models=models.filter(m=>m.pricing?.prompt!=null&&m.pricing?.completion!=null&&Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0);
+        if(!models.length)throw new Error('No se encontraron modelos listables para este endpoint.');
+        const select=$('#discoveredModels');select.innerHTML='<option value="">Selecciona un modelo…</option>'+models.slice(0,150).map(m=>`<option value="${escapeHtml(m.id||m.name||'')}">${escapeHtml(m.name||m.id)}${provider==='openrouter'?' · gratis ahora':''}</option>`).join('');select.classList.remove('hidden');select.onchange=()=>{if(select.value)$('#modelInput').value=select.value;};
+        toast(`${models.length} modelos ${provider==='openrouter'?'gratuitos ':''}encontrados`);
+      }catch(error){toast(`No se pudieron descubrir modelos: ${error.message}. Puedes escribir el ID manualmente.`);}
+      finally{btn.disabled=false;btn.textContent='Descubrir modelos';}
+    });
     $('#settingsDone').onclick=closeModal;
     $('#saveSettings').onclick=()=>{
       if($('#styleSelect'))prefs.style=$('#styleSelect').value;
       if($('#personaInput'))prefs.persona=$('#personaInput').value;
+      if($('#providerSelect'))prefs.provider=$('#providerSelect').value;
       if($('#endpointInput'))prefs.endpoint=$('#endpointInput').value.trim();
-      if($('#modelInput')){prefs.defaultModel=$('#modelInput').value.trim()||defaults.model;if(selectedModel==='ZaBa Auto')prefs.model=prefs.defaultModel;}
+      if($('#modelInput')){const preset=providerPresets[prefs.provider]||providerPresets.custom;prefs.defaultModel=$('#modelInput').value.trim()||preset.model;if(selectedModel==='ZaBa Auto')prefs.model=prefs.defaultModel;}
+      if(tab==='model'){selectedModel='ZaBa Auto';store.write('activeModel',selectedModel);$('#selectedModel').textContent=selectedModel;}
       if($('#apiKeyInput')){const key=$('#apiKeyInput').value.trim();if(key)prefs.apiKey=key;if(!prefs.rememberKey&&key){} }
       if(!prefs.rememberKey && tab==='model' && $('#apiKeyInput')?.value.trim()) { sessionStorage.setItem('zaba.sessionKey',$('#apiKeyInput').value.trim()); }
       if(prefs.rememberKey)sessionStorage.removeItem('zaba.sessionKey');
@@ -202,12 +230,18 @@
   $('#voiceButton').onclick=startVoice;
   $('#modelSelector').onclick=e=>{e.stopPropagation();$('#modelMenu').classList.toggle('hidden');};document.addEventListener('click',e=>{if(!e.target.closest('.model-wrap'))$('#modelMenu').classList.add('hidden');});
   $$('.model-option').forEach(b=>b.onclick=()=>{
-    if(b.dataset.model==='Añadir proveedor'){settingsModal('model');$('#modelMenu').classList.add('hidden');return;}
-    selectedModel=b.dataset.model;
-    const modelIds={'Llama 3.3':'llama-3.3-70b-versatile','Gemini Flash':'gemini-2.0-flash'};
-    prefs.model=selectedModel==='ZaBa Auto'?(prefs.defaultModel||defaults.model):(modelIds[selectedModel]||prefs.defaultModel);
-    store.write('activeModel',selectedModel);$('#selectedModel').textContent=selectedModel;
-    $$('.model-option').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('#modelMenu').classList.add('hidden');updateConnectionStatus();toast(`${selectedModel} seleccionado · verifica el endpoint en Ajustes`);
+    $('#modelMenu').classList.add('hidden');
+    if(b.dataset.model==='Añadir proveedor'){settingsModal('model');return;}
+    if(b.dataset.model==='ZaBa Auto'){
+      selectedModel='ZaBa Auto';prefs.model=prefs.defaultModel||defaults.model;store.write('activeModel',selectedModel);$('#selectedModel').textContent=selectedModel;updateConnectionStatus();toast('Usando el modelo configurado');return;
+    }
+    const profileMap={'OpenRouter Gratis':'openrouter','Google Gemini':'gemini','Groq':'groq'};
+    const provider=profileMap[b.dataset.model];if(!provider)return;
+    const preset=providerPresets[provider];if(prefs.provider!==provider){prefs.apiKey='';sessionStorage.removeItem('zaba.sessionKey');}
+    prefs.provider=provider;prefs.endpoint=preset.endpoint;prefs.defaultModel=preset.model;prefs.model=preset.model;
+    selectedModel=b.dataset.model;store.write('activeModel',selectedModel);saveSettings();$('#selectedModel').textContent=selectedModel;
+    if(!prefs.apiKey){settingsModal('model');toast(`Añade tu clave de ${preset.label} para activarlo`);}
+    else{updateConnectionStatus();toast(`${preset.label} seleccionado`);}
   });
   $('#openSettings').onclick=()=>settingsModal();$('#openSettingsTop').onclick=()=>settingsModal();$('#openPermissions').onclick=permissionModal;$('#privacyInfo').onclick=permissionModal;$('#learnPrivacy').onclick=permissionModal;$('#agentsNav').onclick=agentsModal;$('#projectsNav').onclick=projectsModal;
   $('#collapseSidebar').onclick=()=>$('#sidebar').classList.toggle('collapsed');$('#mobileMenu').onclick=()=>$('#sidebar').classList.toggle('mobile-open');

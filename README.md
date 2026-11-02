@@ -15,7 +15,7 @@ Después visita `http://localhost:8000`.
 ## Qué puedes probar
 
 - Chat interactivo, conversaciones recientes guardadas en el navegador y tarjetas para iniciar tareas.
-- Configuración de un endpoint compatible con la API de chat de OpenAI y un modelo/clave propios desde **Ajustes → Modelo**. Sin credenciales, el chat muestra respuestas demostrativas y explica cómo conectar un modelo.
+- Proveedores preconfigurados: OpenRouter (incluye descubrimiento en vivo de modelos con precio cero), Google Gemini, Groq y endpoints OpenAI-compatible. Se autocompletan las URL y modelos iniciales; puedes descubrir modelos disponibles o escribir otro ID desde **Ajustes → Modelo**. Sin clave, el chat muestra respuestas demostrativas.
 - Selector de modelo, adjuntos de imagen, vídeo y documentos (hasta 20 MB), voz mediante las APIs de voz disponibles en el navegador.
 - Agentes predefinidos y creación de agentes personalizados, preferencias de respuesta y proyectos.
 - Panel de permisos explícitos; selector de carpeta del navegador cuando está disponible. No hay lectura/escritura de archivos en segundo plano ni ejecución de código local.
