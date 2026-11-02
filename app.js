@@ -17,6 +17,8 @@
   const previouslySavedSettings=store.read('settings',{});
   if(!previouslySavedSettings.provider && previouslySavedSettings.endpoint) prefs.provider='custom';
   let conversations = store.read('conversations', []);
+  if(!Array.isArray(conversations)) conversations=[];
+  let showArchived=false;
   let currentId = null, currentAgent = null, attached = [], selectedModel = store.read('activeModel','ZaBa Auto'), directoryHandle = null, recognition = null, toastTimer;
   const welcome = $('#welcome'), thread = $('#chatThread'), input = $('#promptInput'), sendButton = $('#sendButton'), fileInput = $('#fileInput');
 
@@ -50,12 +52,23 @@
     if(currentId===id){currentId=null;currentAgent=null;sendButton.disabled=false;store.write('currentConversation',null);thread.innerHTML='';thread.classList.add('hidden');welcome.classList.remove('hidden');$('#breadcrumbTitle').textContent='Nueva conversación';}
     renderConversationList();toast('Conversación eliminada');
   }
+  function archiveConversation(id, archived) {
+    const conversation=conversations.find(c=>c.id===id);if(!conversation)return;
+    conversation.archived=archived;saveConversations();renderConversationList();
+    toast(archived?'Conversación archivada':'Conversación restaurada a recientes');
+  }
   function renderConversationList() {
-    const list = $('#conversationList');
-    if (!conversations.length) { list.innerHTML = '<p class="empty-conversations">Tus chats guardados aparecerán aquí</p>'; return; }
-    list.innerHTML = conversations.slice(0, 30).map(c => `<div class="conversation-row"><button class="conversation ${c.id === currentId ? 'active':''}" data-id="${escapeHtml(c.id)}" title="${escapeHtml(c.title)}"><span class="conversation-dot"></span><span>${escapeHtml(c.title)}</span></button><button class="conversation-delete" data-delete-id="${escapeHtml(c.id)}" aria-label="Eliminar conversación: ${escapeHtml(c.title)}" title="Eliminar conversación">×</button></div>`).join('');
-    $$('.conversation', list).forEach(btn => btn.addEventListener('click', () => setConversation(btn.dataset.id)));
-    $$('.conversation-delete',list).forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();deleteConversation(btn.dataset.deleteId);}));
+    const list=$('#conversationList'),sectionLabel=$('#conversationSectionLabel'),archiveToggle=$('#toggleArchived');
+    const visible=conversations.filter(c=>Boolean(c.archived)===showArchived);
+    sectionLabel.textContent=showArchived?'ARCHIVADAS':'RECIENTES';
+    archiveToggle.setAttribute('aria-label',showArchived?'Volver a recientes':'Ver conversaciones archivadas');
+    archiveToggle.setAttribute('aria-pressed',String(showArchived));
+    archiveToggle.title=showArchived?'Volver a recientes':'Ver conversaciones archivadas';
+    if(!visible.length){list.innerHTML=`<p class="empty-conversations">${showArchived?'No hay conversaciones archivadas.':'Tus chats recientes aparecerán aquí.'}</p>`;return;}
+    list.innerHTML=visible.slice(0,30).map(c=>`<div class="conversation-row"><button class="conversation ${c.id===currentId?'active':''}" data-id="${escapeHtml(c.id)}" title="${escapeHtml(c.title)}"><span class="conversation-dot"></span><span>${escapeHtml(c.title)}</span></button><button class="conversation-more" aria-label="Opciones de ${escapeHtml(c.title)}" aria-haspopup="menu" title="Opciones">···</button><div class="conversation-menu hidden" role="menu"><button role="menuitem" data-action="${showArchived?'restore':'archive'}" data-id="${escapeHtml(c.id)}">${showArchived?'↩  Restaurar a recientes':'▱  Archivar'}</button><button role="menuitem" class="danger-action" data-action="delete" data-id="${escapeHtml(c.id)}">⌫  Eliminar</button></div></div>`).join('');
+    $$('.conversation',list).forEach(btn=>btn.addEventListener('click',()=>setConversation(btn.dataset.id)));
+    $$('.conversation-more',list).forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const menu=btn.nextElementSibling;$$('.conversation-menu',list).forEach(m=>{if(m!==menu)m.classList.add('hidden');});menu.classList.toggle('hidden');}));
+    $$('.conversation-menu [data-action]',list).forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const {action,id}=btn.dataset;if(action==='delete')deleteConversation(id);else archiveConversation(id,action==='archive');}));
   }
   function renderMessage(role, content, files = [], add = true) {
     const row = document.createElement('article'); row.className = `message ${role}`;
@@ -259,7 +272,9 @@
   $('#openSettings').onclick=()=>settingsModal();$('#openSettingsTop').onclick=()=>settingsModal();$('#openPermissions').onclick=permissionModal;$('#privacyInfo').onclick=permissionModal;$('#learnPrivacy').onclick=permissionModal;$('#agentsNav').onclick=agentsModal;$('#projectsNav').onclick=projectsModal;
   $('#collapseSidebar').onclick=()=>$('#sidebar').classList.toggle('collapsed');$('#mobileMenu').onclick=()=>$('#sidebar').classList.toggle('mobile-open');
   $('#modalClose').onclick=closeModal;$('#modalBackdrop').onclick=e=>{if(e.target===$('#modalBackdrop'))closeModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('#sidebar').classList.remove('mobile-open');}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();newConversation();}});
-  $('#searchChats').onclick=()=>{const q=prompt('Buscar en tus conversaciones:');if(q){const hit=conversations.find(c=>c.title.toLowerCase().includes(q.toLowerCase()));if(hit)setConversation(hit.id);else toast('No encontramos esa conversación');}};
+  $('#toggleArchived').onclick=()=>{showArchived=!showArchived;renderConversationList();};
+  $('#searchChats').onclick=()=>{const q=prompt('Buscar en tus conversaciones:');if(q){const hit=conversations.find(c=>(c.title||'').toLowerCase().includes(q.toLowerCase()));if(hit){showArchived=Boolean(hit.archived);renderConversationList();setConversation(hit.id);}else toast('No encontramos esa conversación');}};
+  document.addEventListener('click',e=>{if(!e.target.closest('.conversation-row'))$$('.conversation-menu').forEach(menu=>menu.classList.add('hidden'));});
   if(!prefs.rememberKey){const sessionKey=sessionStorage.getItem('zaba.sessionKey');if(sessionKey)prefs.apiKey=sessionKey;else if(!store.read('settings',{}).rememberKey)prefs.apiKey='';}
   $('#selectedModel').textContent=selectedModel;
   $$('.model-option').forEach(b=>b.classList.toggle('selected',b.dataset.model===selectedModel));

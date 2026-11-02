@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#10130f">
   <meta name="description" content="ZaBa AI — tu espacio personal de inteligencia artificial.">
   <title>ZaBa AI — Tu espacio de IA</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261102-3">
 </head>
 <body>
   <div class="app-shell">
@@ -26,7 +26,7 @@
         <button class="nav-item" id="projectsNav"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 10h18"/></svg><span>Proyectos</span></button>
       </div>
       <div class="sidebar-section conversations-section">
-        <div class="section-heading"><p class="section-label">RECIENTES</p><button class="tiny-icon" aria-label="Buscar conversaciones" id="searchChats"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div>
+        <div class="section-heading"><p class="section-label" id="conversationSectionLabel">RECIENTES</p><div class="section-tools"><button class="tiny-icon" aria-label="Ver conversaciones archivadas" title="Alternar recientes y archivadas" id="toggleArchived"><svg viewBox="0 0 24 24"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg></button><button class="tiny-icon" aria-label="Buscar conversaciones" id="searchChats"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div></div>
         <div class="conversation-list" id="conversationList"></div>
       </div>
       <div class="sidebar-bottom">
@@ -82,6 +82,6 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="Cerrar">×</button><div id="modalContent"></div></section>
   </div>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=20261102-3"></script>
 </body>
 </html>

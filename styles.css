@@ -16,3 +16,13 @@
 .conversation-row:hover .conversation,.conversation-row:focus-within .conversation{background:#20241e}
 .empty-conversations{font-size:10px;color:#747b70;padding:4px 9px;line-height:1.6}
 @media(max-width:700px){.conversation-delete{opacity:.75}}
+.conversation-row{position:relative}
+.conversation-more{width:24px;height:27px;flex:none;border:0;border-radius:6px;background:transparent;color:#909789;font-size:17px;line-height:1;letter-spacing:1px;opacity:.72}
+.conversation-more:hover,.conversation-more:focus-visible{opacity:1;background:#30372b;color:#d8e7c5}
+.conversation-menu{position:absolute;right:0;top:29px;z-index:12;width:158px;padding:5px;background:#22271f;border:1px solid #3a4135;border-radius:9px;box-shadow:0 12px 30px #0009}
+.conversation-menu button{width:100%;display:block;text-align:left;border:0;border-radius:6px;padding:8px 9px;background:transparent;color:#d0d5ca;font-size:10px}
+.conversation-menu button:hover{background:#30372b;color:#e8efdf}
+.conversation-menu button.danger-action{color:#e7a09a}
+.conversation-menu button.danger-action:hover{background:#3a2522;color:#ffc0b9}
+.section-tools{display:flex;align-items:center;gap:2px}
+#toggleArchived[aria-pressed="true"]{color:#c4ed92;background:#252c20}
